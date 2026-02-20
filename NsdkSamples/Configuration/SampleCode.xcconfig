@@ -1,0 +1,18 @@
+//
+// See LICENSE folder for this sample’s licensing information.
+//
+// SampleCode.xcconfig
+//
+
+// The `SAMPLE_CODE_DISAMBIGUATOR` configuration is to make it easier to build
+// and run a sample code project. Once you set your project's development team,
+// you'll have a unique bundle identifier. This is because the bundle identifier
+// is derived based on the 'SAMPLE_CODE_DISAMBIGUATOR' value. Do not use this
+// approach in your own projects—it's only useful for sample code projects because
+// they are frequently downloaded and don't have a development team set.
+SAMPLE_CODE_DISAMBIGUATOR=${DEVELOPMENT_TEAM}
+
+// Base bundle identifier. Each developer should customize this to their own domain
+// to avoid conflicts. The bundle ID will be unique per developer based on their
+// development team setting in Xcode.
+PRODUCT_BUNDLE_IDENTIFIER_BASE = com.example.nsdk.externalsamples.swift
