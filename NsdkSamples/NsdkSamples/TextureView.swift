@@ -1,43 +1,35 @@
+// Copyright 2026 Niantic Spatial.
+
 import Metal
 import MetalKit
 import UIKit
-import SwiftyNsdk
+import NSDK
 import simd
 
 final class TextureView: MTKView, MTKViewDelegate {
-    // Metal resources
     private var commandQueue: MTLCommandQueue!
     private var pipelineState: MTLRenderPipelineState!
     private var vertexBuffer: MTLBuffer!
-    
-    // The external texture assigned to be displayed
+
     private var assignedTexture: MTLTexture?
-    
-    // The internal texture actually displayed
     private var ownedTexture: MTLTexture?
-    
-    // Shader names
+
     private let vertexShaderName: String
     private let fragmentShaderName: String
-    
-    // Transform to map normalized image coordinates -> viewport
+
+    // Maps normalized image coordinates to the viewport.
     private var displayTransform: CGAffineTransform = .identity
-    
-    // Transform to warp the image from one view to another
+
+    // 3×3 homography warping UV coordinates from reference view to target view.
     private var reprojection: matrix_float3x3 = matrix_identity_float3x3
     
-    /// The transparency of the rendered image
+    /// The transparency of the rendered image.
     public var opacity: Float = 1.0
-    
-    // The color tint of the view
+
     public var colorTint = simd_float3(x: 1, y: 1, z: 1)
-    
-    // Shader uniforms
+
     struct Uniforms {
-        // The transform used to sample the texture
         var uvTransform: float3x3
-        
-        // Color tint to apply for the image
         var tint: SIMD4<Float>
     }
     
@@ -69,17 +61,15 @@ final class TextureView: MTKView, MTKViewDelegate {
             print("Could not initialize TextureView because MTLDevice is nil.")
             return
         }
-        
-        // Compile shaders
+
         guard let library = device.makeDefaultLibrary(),
               let vertexFunc = library.makeFunction(name: vertexShaderName),
               let fragmentFunc = library.makeFunction(name: fragmentShaderName) else {
             fatalError("Failed to load Metal shader functions")
         }
-        
-        // Create the command queue
+
         commandQueue = device.makeCommandQueue()
-        
+
         // Quad covering the screen (clip space coordinates) with UVs
         let quadVertices: [Float] = [
             -1,  1, 0, 0,
@@ -93,7 +83,6 @@ final class TextureView: MTKView, MTKViewDelegate {
                                          length: MemoryLayout<Float>.size * quadVertices.count,
                                          options: [])
         
-        // Pipeline descriptor
         let pipelineDesc = MTLRenderPipelineDescriptor()
         pipelineDesc.vertexFunction = vertexFunc
         pipelineDesc.fragmentFunction = fragmentFunc
@@ -109,7 +98,7 @@ final class TextureView: MTKView, MTKViewDelegate {
         attachment.destinationRGBBlendFactor = .oneMinusSourceAlpha
         attachment.destinationAlphaBlendFactor = .oneMinusSourceAlpha
         
-        // Describe how to read [x, y, u, v] from buffer(0)
+        // Read [x, y, u, v] from buffer(0)
         let vertexDesc = MTLVertexDescriptor()
         vertexDesc.attributes[0].format = .float2      // position
         vertexDesc.attributes[0].offset = 0
@@ -126,12 +115,9 @@ final class TextureView: MTKView, MTKViewDelegate {
         pipelineDesc.vertexDescriptor = vertexDesc
         pipelineState = try! device.makeRenderPipelineState(descriptor: pipelineDesc)
         
-        // Set frame rate to 60 Hz
         isPaused = false
         enableSetNeedsDisplay = false
         preferredFramesPerSecond = 60
-        
-        // Delegate callbacks are implemented by the view
         delegate = self
     }
     
@@ -162,6 +148,7 @@ final class TextureView: MTKView, MTKViewDelegate {
     }
     
     // MARK: - MTKViewDelegate
+
     func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
         updateDisplayTransform(for: size)
     }
@@ -172,10 +159,7 @@ final class TextureView: MTKView, MTKViewDelegate {
               let commandBuffer = commandQueue.makeCommandBuffer(),
               let descriptor = currentRenderPassDescriptor else { return }
         
-        // Does the texture need to be updated?
         if let source = assignedTexture {
-            
-            // Reallocate if needed
             if ownedTexture == nil ||
                 ownedTexture!.width != source.width ||
                 ownedTexture!.height != source.height ||
@@ -192,7 +176,6 @@ final class TextureView: MTKView, MTKViewDelegate {
                 updateDisplayTransform(for: bounds.size)
             }
             
-            // Copy from assigned texture to owned texture
             if let dstTexture = ownedTexture,
                let blitEncoder = commandBuffer.makeBlitCommandEncoder() {
                 blitEncoder.copy(from: source,
@@ -205,14 +188,12 @@ final class TextureView: MTKView, MTKViewDelegate {
                 blitEncoder.endEncoding()
             }
             
-            // Done updating the texture
             assignedTexture = nil
         }
-        
+
         guard let dstTexture = ownedTexture,
               let renderEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: descriptor) else { return }
-        
-        // Now render with the owned texture
+
         var uniforms = makeUniforms()
         renderEncoder.setRenderPipelineState(pipelineState)
         renderEncoder.setVertexBuffer(vertexBuffer, offset: 0, index: 0)
@@ -227,17 +208,14 @@ final class TextureView: MTKView, MTKViewDelegate {
     }
     
     // MARK: - Helpers
+
     private func updateDisplayTransform(for viewportSize: CGSize) {
-        // Reset the transform if no texture is displayed
         guard let texture = self.ownedTexture else {
             displayTransform = CGAffineTransform.identity
             return
         }
-        
-        // Get the current UI orientation
+
         let orientation = window?.windowScene?.interfaceOrientation ?? .portrait
-        
-        // Calculate a new transform
         displayTransform = ImageMath.displayTransform(
             for: orientation,
             viewportSize: viewportSize,

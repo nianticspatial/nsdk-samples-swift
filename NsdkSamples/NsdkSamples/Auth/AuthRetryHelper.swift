@@ -1,7 +1,7 @@
-// Copyright Niantic Spatial.
+// Copyright 2026 Niantic Spatial.
 
 import Foundation
-import SwiftyNsdk
+import NSDK
 
 /// A helper class that provides automatic retry logic for NSDK operations that may fail.
 ///
@@ -20,14 +20,14 @@ import SwiftyNsdk
 /// ```
 @MainActor
 class AuthRetryHelper {
-    private let session: NsdkSession
+    private let session: NSDKSession
     private let initialAuthWaitSeconds: TimeInterval = 30.0
     private let retryDelaySeconds: TimeInterval = 1.0
 
     /// Creates a new retry helper.
     ///
     /// - Parameter session: The NSDK session to monitor for authorization status
-    init(session: NsdkSession) {
+    init(session: NSDKSession) {
         self.session = session
     }
 
