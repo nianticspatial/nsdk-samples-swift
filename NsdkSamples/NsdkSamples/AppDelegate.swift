@@ -1,9 +1,4 @@
-/*
-See LICENSE folder for this sample’s licensing information.
-
-Abstract:
-Contains the application's delegate.
-*/
+// Copyright 2026 Niantic Spatial.
 
 import UIKit
 import ARKit

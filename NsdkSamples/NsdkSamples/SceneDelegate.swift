@@ -1,9 +1,4 @@
-/*
-See LICENSE folder for this sample's licensing information.
-
-Abstract:
-Contains the window scene delegate.
-*/
+// Copyright 2026 Niantic Spatial.
 
 import UIKit
 import ARKit
@@ -27,7 +22,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 can't be triggered in a production scenario.)
                 In apps where AR is an additive feature, use `isSupported` to
                 determine whether to show UI for launching AR experiences.
-            """) // For details, see https://developer.apple.com/documentation/arkit
+            """)
         }
 
         let window = UIWindow(windowScene: windowScene)
