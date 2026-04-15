@@ -1,12 +1,10 @@
-import AuthenticationServices
+// Copyright 2026 Niantic Spatial.
+//
+// Opens a browser-based login page and handles the deep-link callback.
+// The redirectType "nsdk-samples" can be replaced with your own URL scheme when reusing this code
+// (update CFBundleURLSchemes in Info.plist accordingly).
 
-//
-//  LoginManager.swift
-//  NsdkSamples
-//
-//  Handles opening the web-page for login into the Enterprise Auth sample
-//  and receiving the results.
-//
+import AuthenticationServices
 
 class LoginManager: NSObject, ASWebAuthenticationPresentationContextProviding {
 
@@ -17,40 +15,33 @@ class LoginManager: NSObject, ASWebAuthenticationPresentationContextProviding {
     }
 
     func startAuth() {
-        // 1. The URL for the login page
-        guard let authURL = URL(string: AuthConstants.EndPointUrls.SignIn + "?redirectType=ios-app") else { return }
-
-        // 2. The scheme you defined in Info.plist
-        let scheme = "nsdk-samples"
+        // On success, the "nsdk-samples" redirectType returns a callback with "nsdk-samples://..." scheme.
+        // NOTE: This can be replaced with your own URL scheme if reusing this code (so as not to conflict).
+        guard let authURL = URL(string: AuthConstants.EndPointUrls.SignIn + "?redirectType=\(AuthConstants.callbackUrlScheme)") else { return }
 
         let session = ASWebAuthenticationSession(
             url: authURL,
-            callbackURLScheme: scheme
+            callbackURLScheme: AuthConstants.callbackUrlScheme
         ) { callbackURL, error in
-            // Handle the response
             if let error = error {
                 print("Auth error: \(error.localizedDescription)")
                 return
             }
-
             if let callbackURL = callbackURL {
                 self.handleCallback(url: callbackURL)
             }
         }
 
-        // 3. Set the presentation context (usually the main window)
         session.presentationContextProvider = self
         session.start()
     }
 
-    // Pass the view into your manager or keep a reference
     func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
-        // If this code is inside a UIViewController:
         return self.view.window ?? ASPresentationAnchor()
     }
 
     private func handleCallback(url: URL) {
         let tokens = AuthUtils.extractTokens(from: url.absoluteString)
-        UserSessionManager.setUserSession(refreshToken: tokens.refreshToken, accessToken: tokens.accessToken)
+        NSSampleSessionManager.setNSSampleSession(sessionToken: tokens.refreshToken)
     }
 }
