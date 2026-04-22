@@ -1,0 +1,9 @@
+# Public Swift samples export (repo root). See NsdkSamples/.gitignore for Xcode project rules.
+
+.DS_Store
+
+# SwiftPM / Xcode
+.build/
+.swiftpm/
+DerivedData/
+*.xcuserstate
