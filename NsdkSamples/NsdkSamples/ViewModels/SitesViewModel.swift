@@ -27,7 +27,6 @@ final class SitesViewModel {
     // MARK: - Published UI state
 
     @Published private(set) var listMode: ListMode = .modeSelection
-    @Published private(set) var currentUser: UserInfo?
     @Published private(set) var organizations: [OrganizationInfo] = []
     @Published private(set) var siteAssetPairs: [(SiteInfo, AssetInfo)] = []
     @Published private(set) var sitesLoadProgress: (loaded: Int, total: Int)?
@@ -203,26 +202,17 @@ final class SitesViewModel {
     // MARK: - Loading
 
     func loadInitialData() async {
-        infoPanelText = "⏳ Loading user info..."
+        infoPanelText = "⏳ Loading organizations..."
         do {
-            let userResult = try await retryHelper.withRetry {
-                try await sitesSession.requestSelfUserInfo()
-            }
-            guard let user = userResult.user else {
-                infoPanelText = "❌ Failed to retrieve user information. Make sure you're authenticated."
-                return
-            }
-            currentUser = user
-            infoPanelText = infoText(for: user)
-
             let orgsResult = try await retryHelper.withRetry {
-                try await sitesSession.requestOrganizationsForUser(userId: user.id)
+                try await sitesSession.requestSelfOrganizationInfo()
             }
             let orgs = orgsResult.organizations
             if orgs.isEmpty {
-                infoPanelText = (infoPanelText) + "\n\n⚠️ No organizations found"
+                infoPanelText = "⚠️ No organizations found. Make sure you're authenticated."
             } else {
                 organizations = orgs
+                infoPanelText = "✅ Loaded \(orgs.count) organization(s)"
             }
         } catch is CancellationError {
         } catch {
@@ -306,9 +296,7 @@ final class SitesViewModel {
         siteAssetPairs = []
         sitesLoadProgress = nil
         showSitesFailureRecovery = false
-        if let user = currentUser {
-            infoPanelText = infoText(for: user)
-        }
+        infoPanelText = "\(organizations.count) organization(s)"
     }
 
     func applySiteSelection(_ site: SiteInfo) {
