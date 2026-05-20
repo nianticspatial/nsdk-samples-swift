@@ -19,6 +19,7 @@ final class CaptureViewController: UIViewController {
     // MARK: - State
 
     private var isCapturing = false
+    private var exportTask: Task<Void, Never>?
 
     // MARK: - UI
 
@@ -100,6 +101,8 @@ final class CaptureViewController: UIViewController {
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        exportTask?.cancel()
+        exportTask = nil
         scanningSession.stop()
     }
 
@@ -210,48 +213,69 @@ extension CaptureViewController {
         visualizationView.isHidden = true
         visualizationView.reset()
 
-        Task {
+        let scanningSession = scanningSession!
+        let nsdkSession = arManager.nsdkSession
+        let progressView = progressView
+
+        exportTask = Task.detached(priority: .userInitiated) { [weak self] in
+            // Save scan
             let saveInfo: NSDKScanningSession.SaveInfo
             do {
                 saveInfo = try await scanningSession.saveCurrentScan(timeout: 20)
             } catch {
-                statusLabel.text = "Failed to save capture."
-                finishCaptureFlow()
+                guard !Task.isCancelled else { return }
+                await MainActor.run { [weak self] in
+                    self?.statusLabel.text = "Failed to save capture."
+                    self?.finishCaptureFlow()
+                }
                 return
             }
 
-            statusLabel.text = "Archiving capture..."
-            progressView.progress = 0
-            progressView.isHidden = false
+            guard !Task.isCancelled else { return }
 
-            let exporter = arManager.nsdkSession.acquireRecordingExporter()
-            let progressView = progressView
-            var archivePath: String?
-            do {
-                archivePath = try await Task.detached(priority: .userInitiated) {
-                    try await exporter.export(
-                        scanDirPath: saveInfo.path,
-                        scanId: saveInfo.scanId,
-                        exportAsVideo: false,
-                        progressCallback: { progress in
-                            DispatchQueue.main.async {
-                                progressView.setProgress(progress, animated: true)
-                            }
-                        }
-                    )
-                }.value
-            } catch {
-                print("[CaptureViewController2] Archive failed: \(error)")
+            await MainActor.run {
+                progressView.progress = 0
+                progressView.isHidden = false
             }
 
-            progressView.isHidden = true
-            finishCaptureFlow()
+            // Acquire exporter on main actor (it's @MainActor)
+            let exporter = await MainActor.run { nsdkSession.acquireRecordingExporter() }
 
-            if let archivePath {
-                statusLabel.text = "Capture saved and archived."
-                presentShareSheet(for: archivePath)
-            } else {
-                statusLabel.text = "Failed to archive capture."
+            guard !Task.isCancelled else { return }
+
+            await MainActor.run { [weak self] in
+                self?.statusLabel.text = "Archiving capture..."
+            }
+
+            var archivePath: String?
+            do {
+                archivePath = try await exporter.export(
+                    scanDirPath: saveInfo.path,
+                    scanId: saveInfo.scanId,
+                    exportAsVideo: false,
+                    progressCallback: { progress in
+                        DispatchQueue.main.async {
+                            progressView.setProgress(progress, animated: true)
+                        }
+                    }
+                )
+            } catch {
+                if !Task.isCancelled {
+                    print("[CaptureViewController] Archive failed: \(error)")
+                }
+            }
+
+            guard !Task.isCancelled else { return }
+
+            await MainActor.run { [weak self] in
+                progressView.isHidden = true
+                self?.finishCaptureFlow()
+                if let archivePath {
+                    self?.statusLabel.text = "Capture saved and archived."
+                    self?.presentShareSheet(for: archivePath)
+                } else {
+                    self?.statusLabel.text = "Failed to archive capture."
+                }
             }
         }
     }

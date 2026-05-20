@@ -62,6 +62,17 @@ final class DeviceMappingViewModel: ObservableObject {
             .store(in: &cancellables)
     }
 
+    // MARK: - Mapping Lifecycle
+
+    /// Clears mapping-derived state so a new mapping pass can recreate the root anchor and
+    /// re-register VPS tracking after the previous session was stopped.
+    func resetForNewMapping() {
+        rootAnchorPayload = nil
+        pendingMaps.removeAll()
+        points.removeAll()
+        anchorTransform = nil
+    }
+
     // MARK: - Private Handlers
 
     private func handleMapUpdate(_ buffer: NSDKBuffer) {

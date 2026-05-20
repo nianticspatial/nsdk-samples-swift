@@ -1,0 +1,5 @@
+# Line endings and diffs for public GitHub check-in
+* text=auto
+*.swift text diff=swift
+*.md text diff=markdown
+*.sh text eol=lf

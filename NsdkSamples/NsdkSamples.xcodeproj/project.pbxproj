@@ -11,7 +11,7 @@
 		5C028ED021029E1000C7AB1E /* Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C028ECF21029E1000C7AB1E /* Utilities.swift */; };
 		5C16677F20E6E21D00B25B7E /* Plane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C16677E20E6E21D00B25B7E /* Plane.swift */; };
 		665EE22A2E58DF8900411261 /* TextureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 665EE2292E58DF8500411261 /* TextureView.swift */; };
-		7DD99AA12F1719AD00A0097C /* NSDK in Frameworks */ = {isa = PBXBuildFile; productRef = 06A8B80E03894F44A4BC7C34 /* NSDK */; };
+		7DD99AA12F1719AD00A0097C /* NSDK in Frameworks */ = {isa = PBXBuildFile; productRef = AC54F362590F42A99ADF6ED2 /* NSDK */; };
 		7DD99AA22F171A2300A0097C /* NSDK in Embed Frameworks */ = {isa = PBXBuildFile; productRef = 7DD99AA02F1719AD00A0097C /* NSDK */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		842316E01F2030C300D189D1 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 842316DF1F2030C300D189D1 /* AppDelegate.swift */; };
 		842316E71F2030C300D189D1 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 842316E51F2030C300D189D1 /* Main.storyboard */; };
@@ -464,13 +464,13 @@
 			repositoryURL = "https://github.com/nianticspatial/nsdk-library-xcframework";
 			requirement = {
 				kind = exactVersion;
-				version = "4.0.1-26042802";
+				version = "4.1.0-26051913";
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		06A8B80E03894F44A4BC7C34 /* NSDK */ = {
+		AC54F362590F42A99ADF6ED2 /* NSDK */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 7DD99A9F2F1719AD00A0097C /* XCRemoteSwiftPackageReference "nsdk-library-xcframework" */;
 			productName = NSDK;
