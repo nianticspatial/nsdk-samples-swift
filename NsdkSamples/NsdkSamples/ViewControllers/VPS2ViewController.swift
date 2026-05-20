@@ -21,6 +21,7 @@ final class VPS2ViewController: UIViewController {
     private var meshDownloader: NSDKMeshDownloader?
     private var retryHelper: AuthRetryHelper!
     private var meshDownloadTask: Task<Void, Never>?
+    private var meshDownloadDelayTask: DispatchWorkItem?
 
     private var anchors: [NSDKVpsAnchorId: AnchorEntity] = [:]
     private let coarseMarker = Entity()
@@ -43,10 +44,6 @@ final class VPS2ViewController: UIViewController {
     }
 
     required init?(coder: NSCoder) { fatalError("not supported") }
-
-    deinit {
-        meshDownloadTask?.cancel()
-    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -94,13 +91,20 @@ final class VPS2ViewController: UIViewController {
 
         arManager.startSession()
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+        let workItem = DispatchWorkItem { [weak self] in
             self?.startPOIMeshDownload()
         }
+        meshDownloadDelayTask = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: workItem)
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        // Cancel the delayed mesh download dispatch before it fires.
+        // Without this, the dispatch can fire after viewWillDisappear, creating
+        // a new Task that holds self alive and prevents NSDKSession from being released.
+        meshDownloadDelayTask?.cancel()
+        meshDownloadDelayTask = nil
 
         // Stop the session before removing anchors so the NSDK frame loop
         // cannot re-add or update anchor entities after we clear them.
@@ -126,7 +130,15 @@ final class VPS2ViewController: UIViewController {
         super.viewDidDisappear(animated)
         arManager.stopSession()
         if isMovingFromParent {
-            vps2Session = nil
+            if let vps2Session {
+                arManager.nsdkSession.destroy(vps2Session)
+                self.vps2Session = nil
+            }
+            if let meshDownloader {
+                arManager.nsdkSession.destroy(meshDownloader)
+                self.meshDownloader = nil
+            }
+            cancellables.removeAll()
         }
     }
 

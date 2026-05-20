@@ -248,6 +248,9 @@ final class SitesViewController: UIViewController {
         case .notDetermined:
             locationManager.requestWhenInUseAuthorization()
         case .authorizedWhenInUse, .authorizedAlways:
+            // Note: on iOS 14+, if the user grants "Approximate Location", the OS silently
+            // caps accuracy to ~1 km regardless of this setting.
+            locationManager.desiredAccuracy = kCLLocationAccuracyBest
             locationManager.requestLocation()
         default:
             break
@@ -476,6 +479,7 @@ extension SitesViewController: UITextFieldDelegate {
 extension SitesViewController: CLLocationManagerDelegate {
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         if manager.authorizationStatus == .authorizedWhenInUse || manager.authorizationStatus == .authorizedAlways {
+            manager.desiredAccuracy = kCLLocationAccuracyBest
             manager.requestLocation()
         }
     }

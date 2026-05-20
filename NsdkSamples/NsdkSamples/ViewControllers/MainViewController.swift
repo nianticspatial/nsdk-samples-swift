@@ -68,6 +68,7 @@ final class MainViewController: UIViewController {
     private lazy var loginManager: LoginManager = { LoginManager(view: view) }()
 
     private var hasAutoPromptedLogin = false
+    private var isNavigating = false
 
     // MARK: - Initialization
 
@@ -91,6 +92,7 @@ final class MainViewController: UIViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        isNavigating = false
         authSubscription = nil
         NSSampleSessionManager.start()
         refreshAuthState()
@@ -235,6 +237,7 @@ final class MainViewController: UIViewController {
         button.layer.cornerRadius = 8
         button.tag = tag
         button.addTarget(self, action: #selector(launchChildViewController(sender:)), for: .touchUpInside)
+        button.isExclusiveTouch = true
         return button
     }
 
@@ -269,6 +272,8 @@ final class MainViewController: UIViewController {
     }
 
     @objc private func launchChildViewController(sender: UIButton) {
+        guard !isNavigating else { return }
+        isNavigating = true
         let itemIndex = sender.tag
         guard itemIndex >= 0 && itemIndex < menuItems.count else { return }
         let arManager = createARManager()

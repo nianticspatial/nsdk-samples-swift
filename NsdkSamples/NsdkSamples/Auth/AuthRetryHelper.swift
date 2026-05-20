@@ -41,6 +41,8 @@ class AuthRetryHelper {
         try await waitForAuthorizationIfNeeded(timeout: initialAuthWaitSeconds)
         do {
             return try await operation()
+        } catch is CancellationError {
+            throw CancellationError()
         } catch {
             print("[AuthRetryHelper] Operation failed: \(error), waiting 1 second before retry...")
             try await Task.sleep(nanoseconds: UInt64(retryDelaySeconds * 1_000_000_000))

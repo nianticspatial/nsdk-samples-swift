@@ -212,12 +212,16 @@ final class DeviceMappingViewController: UIViewController {
 private extension DeviceMappingViewController {
 
     func startMapping() {
+        viewModel.resetForNewMapping()
+        if isVpsRunning {
+            vps2Session.stop()
+            isVpsRunning = false
+        }
+
         mappingSession.start()
         mappingSession.startMapping()
-        if !isVpsRunning {
-            vps2Session.start()
-            isVpsRunning = true
-        }
+        vps2Session.start()
+        isVpsRunning = true
         isMapping = true
         loadButton.isHidden = true
         saveButton.isHidden = true

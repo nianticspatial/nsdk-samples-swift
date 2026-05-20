@@ -238,7 +238,6 @@ final class SitesViewModel {
                 infoPanelText = (infoPanelText) + "\n\n⚠️ No sites found"
                 return
             }
-
             sitesLoadProgress = (0, sites.count)
 
             try await withThrowingTaskGroup(of: (SiteInfo, AssetInfo)?.self) { group in
@@ -257,7 +256,11 @@ final class SitesViewModel {
                             }) {
                                 return (site, vpsAsset)
                             }
-                        } catch {
+                        } catch is CancellationError {
+                            print("Cancelled loading assets for site \(site.name)")
+                            throw CancellationError()
+                        }
+                        catch {
                             print("Failed to load assets for site \(site.name): \(error.localizedDescription)")
                         }
                         return nil
@@ -280,9 +283,12 @@ final class SitesViewModel {
 
             sitesLoadProgress = nil
             if siteAssetPairs.isEmpty {
-                infoPanelText = (infoPanelText) + "\n\n⚠️ No sites with Production VPS asset found"
+                infoPanelText = (infoPanelText.replacing("⏳ Loading sites for \(org.name)...", with: "⚠️ No sites with Production VPS asset found"))
             } else {
-                infoPanelText = (infoPanelText) + "\n\nFound \(siteAssetPairs.count) site(s) (checked \(sites.count))"
+                if ( siteAssetPairs.count <= sites.count){
+                    
+                    infoPanelText = (infoPanelText.replacing("⏳ Loading sites for \(org.name)...", with: "✅ Found \(siteAssetPairs.count) site(s) (checked \(sites.count))"))
+                }
             }
         } catch is CancellationError {
         } catch {
