@@ -52,7 +52,7 @@ final class OcclusionViewController: UIViewController {
     // MARK: - UI
 
     private let statusOverlay = ARStatusOverlay()
-    private let helpOverlay = HelpOverlayView(helpText: OcclusionViewController.helpText)
+    private let helpOverlay = HelpOverlayUIKitView(helpText: OcclusionViewController.helpText)
 
     // MARK: - Combine
 

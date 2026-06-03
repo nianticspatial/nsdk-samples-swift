@@ -26,7 +26,7 @@ final class MeshingViewController: UIViewController {
 
     private let meshingButton = UIButton(type: .system)
     private let infoLabel = UILabel()
-    private let helpOverlay = HelpOverlayView(helpText: MeshingViewController.helpText)
+    private let helpOverlay = HelpOverlayUIKitView(helpText: MeshingViewController.helpText)
 
     // MARK: - Combine
 

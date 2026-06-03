@@ -2,7 +2,7 @@
 
 import UIKit
 
-final class HelpOverlayView: UIView {
+final class HelpOverlayUIKitView: UIView {
 
     // MARK: - UI
 

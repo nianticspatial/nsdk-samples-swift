@@ -39,7 +39,7 @@ final class DeviceMappingViewController: UIViewController {
     private let loadButton = UIButton(type: .system)
     private let statusLabel = UILabel()
     private let statusOverlay = ARStatusOverlay()
-    private let helpOverlay = HelpOverlayView(helpText: DeviceMappingViewController.helpText)
+    private let helpOverlay = HelpOverlayUIKitView(helpText: DeviceMappingViewController.helpText)
 
     private lazy var scrollView: UIScrollView = {
         let sv = UIScrollView()

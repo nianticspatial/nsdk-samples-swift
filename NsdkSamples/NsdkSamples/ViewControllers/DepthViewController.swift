@@ -23,7 +23,7 @@ final class DepthViewController: UIViewController {
     private let transparencySlider = UISlider()
     private let sliderLabel = UILabel()
     private let statusOverlay = ARStatusOverlay()
-    private let helpOverlay = HelpOverlayView(helpText: DepthViewController.helpText)
+    private let helpOverlay = HelpOverlayUIKitView(helpText: DepthViewController.helpText)
 
     // MARK: - Combine
 

@@ -28,7 +28,7 @@ final class CaptureViewController: UIViewController {
     private let progressView = UIProgressView()
     private let statusLabel = UILabel()
     private let statusOverlay = ARStatusOverlay()
-    private let helpOverlay = HelpOverlayView(helpText: CaptureViewController.helpText)
+    private let helpOverlay = HelpOverlayUIKitView(helpText: CaptureViewController.helpText)
 
     // MARK: - Combine
 
@@ -292,6 +292,12 @@ extension CaptureViewController {
             return
         }
         let fileURL = URL(fileURLWithPath: filePath)
-        present(UIActivityViewController(activityItems: [fileURL], applicationActivities: nil), animated: true)
+        let activityVC = UIActivityViewController(activityItems: [fileURL], applicationActivities: nil)
+        if let popover = activityVC.popoverPresentationController {
+            popover.sourceView = view
+            popover.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 0, height: 0)
+            popover.permittedArrowDirections = []
+        }
+        present(activityVC, animated: true)
     }
 }

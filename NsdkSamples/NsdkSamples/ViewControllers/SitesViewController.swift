@@ -26,7 +26,7 @@ final class SitesViewController: UIViewController {
 
     private let sessionInfoView = UIView()
     private let sessionInfoLabel = UILabel()
-    private let helpOverlay = HelpOverlayView(helpText: SitesViewController.helpText)
+    private let helpOverlay = HelpOverlayUIKitView(helpText: SitesViewController.helpText)
 
     private let infoContainer = UIView()
     private let infoLabel = UILabel()
