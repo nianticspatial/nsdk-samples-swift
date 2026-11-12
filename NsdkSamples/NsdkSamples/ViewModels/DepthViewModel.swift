@@ -85,3 +85,8 @@ final class DepthViewModel {
             .store(in: &cancellables)
     }
 }
+
+extension DepthViewModel: TextureProviding {
+    var texturePublisher: Published<MTLTexture?>.Publisher { $depthTexture }
+    var reprojectionPublisher: Published<matrix_float3x3>.Publisher? { $reprojection }
+}

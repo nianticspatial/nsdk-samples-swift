@@ -5,13 +5,12 @@
 // (update CFBundleURLSchemes in Info.plist accordingly).
 
 import AuthenticationServices
+import UIKit
 
 class LoginManager: NSObject, ASWebAuthenticationPresentationContextProviding {
 
-    let view: UIView
-
-    init(view: UIView) {
-        self.view = view
+    override init() {
+        super.init()
     }
 
     func startAuth() {
@@ -37,7 +36,9 @@ class LoginManager: NSObject, ASWebAuthenticationPresentationContextProviding {
     }
 
     func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
-        return self.view.window ?? ASPresentationAnchor()
+        let scene = UIApplication.shared.connectedScenes
+            .first { $0.activationState == .foregroundActive } as? UIWindowScene
+        return scene?.keyWindow ?? ASPresentationAnchor()
     }
 
     private func handleCallback(url: URL) {

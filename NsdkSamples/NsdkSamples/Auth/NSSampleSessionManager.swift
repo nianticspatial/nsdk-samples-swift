@@ -35,7 +35,6 @@ enum NSSampleSessionManager {
     ///   - nsdkSession: The NSDK session to configure. Captured weakly
     /// - Returns: An `AnyCancellable` that the caller must retain for the duration of the
     ///   session. Cancelling or releasing it cancels any pending token subscription.
-    @MainActor
     @discardableResult
     static func setupSessionAccess(for nsdkSession: NSDKSession) -> AnyCancellable? {
         if let token = sampleToken, !AuthUtils.isTokenEmptyOrExpiring(token, minUnexpiredTimeLeft: 0) {
@@ -55,7 +54,6 @@ enum NSSampleSessionManager {
         }
     }
 
-    @MainActor
     private static func requestAndSetNsdkAccessToken(nsSampleSessionToken: String, session: NSDKSession) {
         Task { [weak session] in
             guard let session else { return }

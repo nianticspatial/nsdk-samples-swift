@@ -18,7 +18,6 @@ import NSDK
 ///     try await sitesManager.requestSelfUserInfo()
 /// }
 /// ```
-@MainActor
 class AuthRetryHelper {
     private let session: NSDKSession
     private let initialAuthWaitSeconds: TimeInterval = 30.0

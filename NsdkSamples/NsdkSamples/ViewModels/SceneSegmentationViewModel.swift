@@ -85,3 +85,8 @@ final class SceneSegmentationViewModel {
             .store(in: &cancellables)
     }
 }
+
+extension SceneSegmentationViewModel: TextureProviding {
+    var texturePublisher: Published<MTLTexture?>.Publisher { $segmentationTexture }
+    var reprojectionPublisher: Published<matrix_float3x3>.Publisher? { $reprojection }
+}

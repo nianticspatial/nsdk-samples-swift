@@ -15,7 +15,7 @@ import simd
 /// - `rootAnchorPayload`: `String?` — base64 anchor payload for the map origin. Initially `nil` (or bootstrapped from storage). Set once after first map update creates a root anchor.
 /// - `anchorTransform`: `simd_float4x4?` — anchor-to-ARKit transform. Initially `nil`. Updated every VPS anchor event.
 /// - `points`: `[SIMD3<Float>]` — accumulated feature points in anchor-local space. Initially empty. Grown incrementally as each VPS anchor event drains the pending-map queue.
-final class DeviceMappingViewModel: ObservableObject {
+final class DeviceMappingViewModel {
 
     // MARK: - Published State
 
@@ -38,16 +38,12 @@ final class DeviceMappingViewModel: ObservableObject {
     ) {
         self.mapStorage = mapStorage
 
-        // Bootstrap from any map already in storage (e.g. loaded from disk by the caller).
-        if let mapBuffer = mapStorage.mapData(), let anchor = mapStorage.createRootAnchor() {
-            rootAnchorPayload = anchor
-            pendingMaps = [mapBuffer]
-        }
+        // Load the root anchor from any map already in storage (e.g. loaded from disk by the caller).
+        loadRootAnchorFromStorage()
 
         // Subscribe to incremental map updates
         mappingSession.$latestMapUpdate
             .compactMap { $0 }
-            .receive(on: DispatchQueue.main)
             .sink { [weak self] buffer in
                 self?.handleMapUpdate(buffer)
             }
@@ -55,7 +51,6 @@ final class DeviceMappingViewModel: ObservableObject {
 
         // Subscribe to VPS anchor pose updates
         vps2Session.anchorUpdated
-            .receive(on: DispatchQueue.main)
             .sink { [weak self] _, update in
                 self?.handleAnchorUpdate(update)
             }
@@ -64,13 +59,28 @@ final class DeviceMappingViewModel: ObservableObject {
 
     // MARK: - Mapping Lifecycle
 
-    /// Clears mapping-derived state so a new mapping pass can recreate the root anchor and
-    /// re-register VPS tracking after the previous session was stopped.
-    func resetForNewMapping() {
+    /// Clears all mapping-derived state (root anchor, pending maps, points, anchor transform).
+    ///
+    /// Call before starting a new mapping pass, or before loading a different saved map, so the
+    /// root anchor can be recreated and VPS tracking re-registered.
+    func reset() {
         rootAnchorPayload = nil
         pendingMaps.removeAll()
         points.removeAll()
         anchorTransform = nil
+    }
+
+    /// Seeds `rootAnchorPayload` and the pending-map queue from the current `mapStorage`
+    /// contents, creating the root anchor if a map is present.
+    ///
+    /// Call after replacing the storage contents out-of-band — e.g. loading a saved map from
+    /// disk via `mapStorage.addMap(map:)`. The resulting `rootAnchorPayload` change is published
+    /// to the existing subscribers, so the owner does not need to recreate this ViewModel.
+    func loadRootAnchorFromStorage() {
+        if let mapBuffer = mapStorage.mapData(), let anchor = mapStorage.createRootAnchor() {
+            rootAnchorPayload = anchor
+            pendingMaps = [mapBuffer]
+        }
     }
 
     // MARK: - Private Handlers
