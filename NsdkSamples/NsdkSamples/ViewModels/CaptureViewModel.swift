@@ -121,3 +121,7 @@ final class CaptureViewModel {
         compositeTexture = cachedOutput
     }
 }
+
+extension CaptureViewModel: TextureProviding {
+    var texturePublisher: Published<MTLTexture?>.Publisher { $compositeTexture }
+}

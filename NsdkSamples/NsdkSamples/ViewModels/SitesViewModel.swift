@@ -1,20 +1,28 @@
 // Copyright 2026 Niantic Spatial.
 
-import Combine
 import Foundation
 import NSDK
+import Observation
+
+/// A site with one of its VPS assets, production or not (for localization).
+struct SiteWithVpsAsset {
+    let site: SiteInfo
+    let asset: AssetInfo
+}
 
 /// Drives Sites API flows using NSDKSitesSession and AuthRetryHelper.
 ///
 /// Publishes:
-/// - `listMode`: `ListMode` — whether showing organizations or sites. Initially `.organizations`. Changes on drill-down or back navigation.
-/// - `organizations`: `[OrganizationInfo]` — loaded organizations. Initially empty. Set after `loadInitialData()` completes.
-/// - `siteAssetPairs`: `[(SiteInfo, AssetInfo)]` — sites with VPS assets. Initially empty. Populated incrementally during `selectOrganization()`.
-/// - `infoPanelText`: `String` — formatted info panel content. Initially `""`. Updated on every API call or user selection.
-/// - `sitesLoadProgress`: `(loaded: Int, total: Int)?` — incremental loading progress. Initially `nil`. Non-nil only while sites are being fetched.
-/// - `showSitesFailureRecovery`: `Bool` — whether to show failure recovery UI. Initially `false`. Set to `true` on sites load error.
-/// - `filterProduction`: `Bool` — whether to filter VPS assets by production deployment. Initially `true`. User-settable.
-@MainActor
+/// - `listMode` (`ListMode`): whether showing organizations or sites. Initially `.organizations`. Changes on drill-down or back navigation.
+/// - `organizations` (`[OrganizationInfo]`): loaded organizations. Initially empty. Set after `loadInitialData()` completes.
+/// - `siteAssetPairs` (`[SiteWithVpsAsset]`): the VPS assets of the organization's sites in
+///   `assetScope`, one entry per asset. Initially empty. Populated incrementally during `selectOrganization()`.
+/// - `infoPanelText` (`String`): formatted info panel content. Initially `""`. Updated on every API call or user selection.
+/// - `sitesLoadProgress` (`(loaded: Int, total: Int)?`): incremental loading progress. Initially `nil`. Non-nil only while sites are being fetched.
+/// - `showSitesFailureRecovery` (`Bool`): whether to show failure recovery UI. Initially `false`. Set to `true` on sites load error.
+/// - `assetScope` (`AssetScope`): which deployments the lists show. Initially `.production`. Set by `setAssetScope(_:)`,
+///   which re-runs the list on screen.
+@Observable
 final class SitesViewModel {
 
     enum ListMode {
@@ -22,33 +30,64 @@ final class SitesViewModel {
         case organizations
         case sites(organization: OrganizationInfo)
         case sitesNearMe
+        case localizeNearMe
     }
 
     // MARK: - Published UI state
 
-    @Published private(set) var listMode: ListMode = .modeSelection
-    @Published private(set) var organizations: [OrganizationInfo] = []
-    @Published private(set) var siteAssetPairs: [(SiteInfo, AssetInfo)] = []
-    @Published private(set) var sitesLoadProgress: (loaded: Int, total: Int)?
-    @Published private(set) var infoPanelText: String = ""
+    private(set) var listMode: ListMode = .modeSelection
+    private(set) var organizations: [OrganizationInfo] = []
+    private(set) var siteAssetPairs: [SiteWithVpsAsset] = []
+    private(set) var sitesLoadProgress: (loaded: Int, total: Int)?
+    private(set) var infoPanelText: String = ""
 
-    @Published private(set) var showSitesFailureRecovery: Bool = false
-    @Published var filterProduction: Bool = true
+    private(set) var showSitesFailureRecovery: Bool = false
+    private(set) var assetScope: AssetScope = .production
 
-    // Near Me state — (site, anchorPayload) pairs for direct VPS2 launch
-    @Published private(set) var sitesNearMeSitePayloadPairs: [(SiteInfo, String)] = []
-    @Published private(set) var sitesNearMeWarning: String?
+    /// Whether an async load (organizations, sites, or near-me search) is in flight.
+    private(set) var isLoading: Bool = false
+
+    // Near Me state: the nearby sites' VPS assets in assetScope, for direct VPS2 launch
+    private(set) var sitesNearMeResults: [SiteWithVpsAsset] = []
+    private(set) var sitesNearMeWarning: String?
 
     // MARK: - Private
 
-    private let sitesSession: NSDKSitesSession
-    private let retryHelper: AuthRetryHelper
+    @ObservationIgnored private let sitesSession: NSDKSitesSession
+    @ObservationIgnored private let retryHelper: AuthRetryHelper
+    @ObservationIgnored private var loadTask: Task<Void, Never>?
+    /// The last near-me search, so a scope change can re-run it.
+    @ObservationIgnored private var lastNearMeSearch: (lat: Double, lng: Double, radiusMeters: Double)?
 
     // MARK: - Initialization
 
     init(sitesSession: NSDKSitesSession, retryHelper: AuthRetryHelper) {
         self.sitesSession = sitesSession
         self.retryHelper = retryHelper
+    }
+
+    // MARK: - Load task management
+
+    /// Runs `work` as the single in-flight load task, cancelling any previous one.
+    /// `isLoading` is held across a cancel→replace handoff: only the most recent
+    /// (uncancelled) task clears it, so a superseded task can't switch it off
+    /// underneath its replacement.
+    private func runExclusive(_ work: @escaping () async -> Void) {
+        loadTask?.cancel()
+        loadTask = Task { [weak self] in
+            guard let self, !Task.isCancelled else { return }
+            self.isLoading = true
+            await work()
+            guard !Task.isCancelled else { return }
+            self.isLoading = false
+            self.loadTask = nil
+        }
+    }
+
+    func cancelLoading() {
+        loadTask?.cancel()
+        loadTask = nil
+        isLoading = false
     }
 
     // MARK: - Info panel formatting
@@ -112,6 +151,12 @@ final class SitesViewModel {
         if asset.pipelineJobStatus != .unspecified {
             text += "Pipeline Status: \(asset.pipelineJobStatus)\n"
         }
+
+        // Said only when the map is split. The typed data below describes areas[0] alone, so
+        // knowing there are others is what explains why it covers less than the whole asset.
+        if asset.areas.count > 1 {
+            text += "Areas: \(asset.areas.count)\n"
+        }
         if let meshData = asset.meshData {
             text += "Mesh Root Node ID: \(meshData.rootNodeId)\n"
             text += "Mesh Coverage: \(meshData.meshCoverage) m²\n"
@@ -131,63 +176,84 @@ final class SitesViewModel {
         return text
     }
 
-    func anchorPayload(for siteId: String) -> String? {
-        guard let pair = siteAssetPairs.first(where: { $0.0.id == siteId }),
-              let vps = pair.1.vpsData,
-              !vps.anchorPayload.isEmpty else {
-            return nil
-        }
-        return vps.anchorPayload
-    }
-
     // MARK: - Mode Selection
 
-    func startFromOrgsFlow() async {
+    func startFromOrgsFlow() {
         listMode = .organizations
-        await loadInitialData()
+        runExclusive { [weak self] in
+            await self?.loadInitialData()
+        }
     }
 
     func startNearMeFlow() {
-        sitesNearMeSitePayloadPairs = []
+        lastNearMeSearch = nil
+        sitesNearMeResults = []
         sitesNearMeWarning = nil
         listMode = .sitesNearMe
     }
 
+    /// Enters the direct area-localization flow. VPS2View does the localizing, so no
+    /// Sites API call is needed here.
+    func startLocalizeNearMeFlow() {
+        infoPanelText = "Enter a coordinate and radius, then localize against every VPS site in that area."
+        listMode = .localizeNearMe
+    }
+
+    /// Switches `assetScope` and re-runs the list on screen with it.
+    func setAssetScope(_ scope: AssetScope) {
+        guard scope != assetScope else { return }
+        assetScope = scope
+        switch listMode {
+        case .sitesNearMe:
+            if let search = lastNearMeSearch {
+                loadNearMeSites(lat: search.lat, lng: search.lng, radiusMeters: search.radiusMeters)
+            }
+        case .sites(let organization):
+            selectOrganization(organization)
+        case .modeSelection, .organizations, .localizeNearMe:
+            break
+        }
+    }
+
     func backToModeSelection() {
+        cancelLoading()
         listMode = .modeSelection
         infoPanelText = ""
     }
 
     // MARK: - Near Me Loading
 
-    func loadNearMeSites(lat: Double, lng: Double, radiusMeters: Double) async {
+    func loadNearMeSites(lat: Double, lng: Double, radiusMeters: Double) {
+        runExclusive { [weak self] in
+            await self?.performNearMeSearch(lat: lat, lng: lng, radiusMeters: radiusMeters)
+        }
+    }
+
+    private func performNearMeSearch(lat: Double, lng: Double, radiusMeters: Double) async {
         infoPanelText = "⏳ Searching for VPS sites within \(Int(radiusMeters))m..."
-        sitesNearMeSitePayloadPairs = []
+        lastNearMeSearch = (lat, lng, radiusMeters)
+        sitesNearMeResults = []
         sitesNearMeWarning = nil
+        let scope = assetScope
 
         do {
+            // .all adds non-production assets, which localize by asset ID.
             let result = try await retryHelper.withRetry {
                 try await sitesSession.requestSiteAssetsByLocation(
-                    lat: lat, lng: lng, radiusMeters: radiusMeters, assetType: .vpsInfo
+                    lat: lat, lng: lng, radiusMeters: radiusMeters, assetType: .vpsInfo, scope: scope
                 )
             }
 
-            var pairs: [(SiteInfo, String)] = []
-            for entry in result.entries {
-                if let vpsAsset = entry.assets.first(where: {
-                    guard let vps = $0.vpsData, !vps.anchorPayload.isEmpty else { return false }
-                    return $0.deployment == .production || !filterProduction
-                }), let payload = vpsAsset.vpsData?.anchorPayload {
-                    pairs.append((entry.site, payload))
-                }
+            let results = result.entries.flatMap { entry in
+                Self.vpsAssets(entry.assets, scope: scope).map { SiteWithVpsAsset(site: entry.site, asset: $0) }
             }
 
-            sitesNearMeSitePayloadPairs = pairs
-            if pairs.isEmpty {
+            sitesNearMeResults = results
+            if results.isEmpty {
                 sitesNearMeWarning = "No VPS sites found within \(Int(radiusMeters))m."
                 infoPanelText = "No sites with VPS assets found near this location."
             } else {
-                infoPanelText = "Found \(pairs.count) VPS site(s) within \(Int(radiusMeters))m."
+                infoPanelText = "Found \(results.count) VPS asset(s) within \(Int(radiusMeters))m."
                 sitesNearMeWarning = nil
             }
             listMode = .sitesNearMe
@@ -201,7 +267,7 @@ final class SitesViewModel {
 
     // MARK: - Loading
 
-    func loadInitialData() async {
+    private func loadInitialData() async {
         infoPanelText = "⏳ Loading organizations..."
         do {
             let orgsResult = try await retryHelper.withRetry {
@@ -220,7 +286,13 @@ final class SitesViewModel {
         }
     }
 
-    func selectOrganization(_ org: OrganizationInfo) async {
+    func selectOrganization(_ org: OrganizationInfo) {
+        runExclusive { [weak self] in
+            await self?.performSelectOrganization(org)
+        }
+    }
+
+    private func performSelectOrganization(_ org: OrganizationInfo) async {
         showSitesFailureRecovery = false
         listMode = .sites(organization: org)
         siteAssetPairs = []
@@ -239,22 +311,20 @@ final class SitesViewModel {
                 return
             }
             sitesLoadProgress = (0, sites.count)
+            let scope = assetScope
 
-            try await withThrowingTaskGroup(of: (SiteInfo, AssetInfo)?.self) { group in
+            try await withThrowingTaskGroup(of: [SiteWithVpsAsset].self) { group in
                 for site in sites {
                     group.addTask {
                         try Task.checkCancellation()
-                        let filterProduction = await MainActor.run { self.filterProduction }
                         do {
+                            // This endpoint returns every asset, production or not, so vpsAssets
+                            // applies the scope.
                             let assetsResult = try await self.retryHelper.withRetry {
                                 try await self.sitesSession.requestAssetsForSite(siteId: site.id)
                             }
-                            let assets = assetsResult.assets
-                            if let vpsAsset = assets.first(where: { asset in
-                                guard let vps = asset.vpsData, !vps.anchorPayload.isEmpty else { return false }
-                                return asset.deployment == .production || !filterProduction
-                            }) {
-                                return (site, vpsAsset)
+                            return Self.vpsAssets(assetsResult.assets, scope: scope).map {
+                                SiteWithVpsAsset(site: site, asset: $0)
                             }
                         } catch is CancellationError {
                             print("Cancelled loading assets for site \(site.name)")
@@ -263,32 +333,26 @@ final class SitesViewModel {
                         catch {
                             print("Failed to load assets for site \(site.name): \(error.localizedDescription)")
                         }
-                        return nil
+                        return []
                     }
                 }
 
                 var loaded = 0
-                for try await pair in group {
+                for try await pairs in group {
                     try Task.checkCancellation()
                     loaded += 1
-                    let toAdd = pair
                     await MainActor.run {
                         self.sitesLoadProgress = (loaded, sites.count)
-                        if let toAdd {
-                            self.siteAssetPairs.append(toAdd)
-                        }
+                        self.siteAssetPairs.append(contentsOf: pairs)
                     }
                 }
             }
 
             sitesLoadProgress = nil
             if siteAssetPairs.isEmpty {
-                infoPanelText = (infoPanelText.replacing("⏳ Loading sites for \(org.name)...", with: "⚠️ No sites with Production VPS asset found"))
+                infoPanelText = (infoPanelText.replacing("⏳ Loading sites for \(org.name)...", with: "⚠️ No sites with a \(scope == .production ? "Production " : "")VPS asset found"))
             } else {
-                if ( siteAssetPairs.count <= sites.count){
-                    
-                    infoPanelText = (infoPanelText.replacing("⏳ Loading sites for \(org.name)...", with: "✅ Found \(siteAssetPairs.count) site(s) (checked \(sites.count))"))
-                }
+                infoPanelText = (infoPanelText.replacing("⏳ Loading sites for \(org.name)...", with: "✅ Found \(siteAssetPairs.count) VPS asset(s) (checked \(sites.count) site(s))"))
             }
         } catch is CancellationError {
         } catch {
@@ -298,6 +362,7 @@ final class SitesViewModel {
     }
 
     func backToOrganizations() {
+        cancelLoading()
         listMode = .organizations
         siteAssetPairs = []
         sitesLoadProgress = nil
@@ -305,9 +370,19 @@ final class SitesViewModel {
         infoPanelText = "\(organizations.count) organization(s)"
     }
 
-    func applySiteSelection(_ site: SiteInfo) {
-        guard let pair = siteAssetPairs.first(where: { $0.0.id == site.id }) else { return }
-        infoPanelText = infoText(for: pair.0) + "\n\n" + infoText(for: pair.1)
+    func applySelection(_ pair: SiteWithVpsAsset) {
+        infoPanelText = infoText(for: pair.site) + "\n\n" + infoText(for: pair.asset)
+    }
+
+    /// The VPS assets in `scope` that VPS2 can localize to: those with a map.
+    /// Nonisolated: the organization flow calls it from its task group's child tasks.
+    nonisolated private static func vpsAssets(_ assets: [AssetInfo], scope: AssetScope) -> [AssetInfo] {
+        assets.filter { asset in
+            guard asset.assetType == .vpsInfo, let vps = asset.vpsData, !vps.anchorPayload.isEmpty else {
+                return false
+            }
+            return scope == .all || asset.deployment == .production
+        }
     }
 
     private static func formatTimestamp(_ timestamp: Int64) -> String {

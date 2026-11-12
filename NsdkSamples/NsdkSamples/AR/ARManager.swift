@@ -34,19 +34,31 @@ class ARManager: NSObject, UIOrientationReporter {
         return NSDKScreenOrientation(orientation)
     }
 
+    /// True when running against a playback dataset rather than the live camera.
+    var isPlayback: Bool { playbackDataset != nil }
+
+    /// The active playback dataset, or nil in live mode. Lets callers read its recorded
+    /// metadata (e.g. location) without playback having streamed a frame yet.
+    let playbackDataset: PlaybackDataset?
+
     // MARK: - Private
 
     private var dataSource: NSDKSessionDataSource?
     private var providers: [ARProvider] = []
-    private static let playbackDatasetDirectory = "" //<-- PUT_PLAYBACK_DATASET_DIRECTORY_NAME_HERE
+    private var isTornDown = false
 
     // MARK: - Initialization
 
-    init(nsdkSession: NSDKSession) {
+    /// - Parameters:
+    ///   - nsdkSession: The NSDK session to drive.
+    ///   - playbackDataset: When non-nil, the manager runs in playback mode using this dataset;
+    ///     when nil, it runs a live AR session. The caller chooses which mode to use.
+    init(nsdkSession: NSDKSession, playbackDataset: PlaybackDataset?) {
         self.nsdkSession = nsdkSession
+        self.playbackDataset = playbackDataset
 
-        if let dataset = BundlePlaybackDatasetLoader(directory: Self.playbackDatasetDirectory).loadDataset() {
-            nsdkView = NSDKView(dataset: dataset)
+        if let playbackDataset {
+            nsdkView = NSDKView(dataset: playbackDataset)
         } else {
             nsdkView = NSDKView()
         }
@@ -73,6 +85,14 @@ class ARManager: NSObject, UIOrientationReporter {
 
     // MARK: - Data Source
 
+    /// The latest GPS sample from the active data source: the streaming frame's GPS in playback
+    /// (nil until playback has run a frame), or the device fix in live mode (nil before the first
+    /// fix). Callers that need the dataset's recorded location before playback runs should read
+    /// `playbackDataset` directly.
+    func latestGpsSample() -> NSDKFrameData.GpsData? {
+        return dataSource?.latestGpsSample()
+    }
+
     private func setupDataSource() {
         if let playbackSession = nsdkView.session as? PlaybackSession {
             dataSource = PlaybackSessionDataSource(session: playbackSession)
@@ -88,6 +108,12 @@ class ARManager: NSObject, UIOrientationReporter {
     // MARK: - ARSession Lifecycle
 
     func startSession() {
+        // ARKit is only required for a live session. Playback (PlaybackSession) runs without
+        // ARKit, so it must be allowed on devices/simulators where world tracking is unsupported.
+        guard nsdkView.session is PlaybackSession || ARWorldTrackingConfiguration.isSupported else {
+            fatalError("ARKit is not available on this device.")
+        }
+
         let config = ARWorldTrackingConfiguration()
         config.planeDetection = [.horizontal, .vertical]
         if ARUtils.isLidarAvailable() {
@@ -100,6 +126,19 @@ class ARManager: NSObject, UIOrientationReporter {
 
     func stopSession() {
         nsdkView.session.pause()
+        UIApplication.shared.isIdleTimerDisabled = false
+    }
+
+    func teardown() {
+        isTornDown = true
+        stopSession()
+        for provider in providers {
+            provider.stop()
+        }
+        providers.removeAll()
+        nsdkView.delegate = nil
+        nsdkSession.dataSource = nil
+        dataSource = nil
     }
 
     private func setupLighting() {
@@ -120,6 +159,7 @@ class ARManager: NSObject, UIOrientationReporter {
     // MARK: - Per-Frame Update
 
     private func handleFrameUpdate() {
+        guard !isTornDown else { return }
         nsdkSession.update()
         frameState.update(camera: nsdkView.getCamera())
         for provider in providers {

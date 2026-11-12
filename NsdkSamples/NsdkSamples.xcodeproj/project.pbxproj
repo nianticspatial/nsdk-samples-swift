@@ -7,17 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		112FE5671F4F95A200BF85EA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 112FE5661F4F95A200BF85EA /* Assets.xcassets */; };
-		5C028ED021029E1000C7AB1E /* Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C028ECF21029E1000C7AB1E /* Utilities.swift */; };
-		5C16677F20E6E21D00B25B7E /* Plane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C16677E20E6E21D00B25B7E /* Plane.swift */; };
-		665EE22A2E58DF8900411261 /* TextureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 665EE2292E58DF8500411261 /* TextureView.swift */; };
-		7DD99AA12F1719AD00A0097C /* NSDK in Frameworks */ = {isa = PBXBuildFile; productRef = AC54F362590F42A99ADF6ED2 /* NSDK */; };
+		27B8F5C22F71B0AC00275247 /* NsdkSamplesApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27B8F5C32F71B0AC00275247 /* NsdkSamplesApp.swift */; };
+		7DD99AA12F1719AD00A0097C /* NSDK in Frameworks */ = {isa = PBXBuildFile; productRef = 59443C2EB2B84A45B4419671 /* NSDK */; };
 		7DD99AA22F171A2300A0097C /* NSDK in Embed Frameworks */ = {isa = PBXBuildFile; productRef = 7DD99AA02F1719AD00A0097C /* NSDK */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		842316E01F2030C300D189D1 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 842316DF1F2030C300D189D1 /* AppDelegate.swift */; };
-		842316E71F2030C300D189D1 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 842316E51F2030C300D189D1 /* Main.storyboard */; };
-		842316E91F2030C300D189D1 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 842316E81F2030C300D189D1 /* SceneDelegate.swift */; };
-		84ABEA0A1F3D15E70052D547 /* Assets.scnassets in Resources */ = {isa = PBXBuildFile; fileRef = 84ABEA091F3D15E70052D547 /* Assets.scnassets */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		51297F132CE5100C007F37FA /* Embed Frameworks */ = {
@@ -34,25 +30,18 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		112FE5661F4F95A200BF85EA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		254A1C90254A0E7000000001 /* SampleCode.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = SampleCode.xcconfig; path = Configuration/SampleCode.xcconfig; sourceTree = "<group>"; };
-		5C028ECF21029E1000C7AB1E /* Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities.swift; sourceTree = "<group>"; };
-		5C16677E20E6E21D00B25B7E /* Plane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Plane.swift; sourceTree = "<group>"; };
-		665EE2292E58DF8500411261 /* TextureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextureView.swift; sourceTree = "<group>"; };
+		27B8F5C32F71B0AC00275247 /* NsdkSamplesApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NsdkSamplesApp.swift; sourceTree = "<group>"; };
 		842316DC1F2030C300D189D1 /* NsdkSamples.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NsdkSamples.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		842316DF1F2030C300D189D1 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		842316E61F2030C300D189D1 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
-		842316E81F2030C300D189D1 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		842316ED1F2030C300D189D1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		84ABEA091F3D15E70052D547 /* Assets.scnassets */ = {isa = PBXFileReference; lastKnownFileType = wrapper.scnassets; path = Assets.scnassets; sourceTree = "<group>"; };
-		F5491360F548E99000000001 /* LICENSE.txt */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		1A2B3C4D5E6F000000000C01 /* Common */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Common; sourceTree = "<group>"; };
+		1A2B3C4D5E6F000000000C02 /* Resources */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Resources; sourceTree = "<group>"; };
 		27B8F5B52F719F7C00275247 /* AR */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = AR; sourceTree = "<group>"; };
-		27B8F5BD2F71B0AC00275247 /* ViewControllers */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = ViewControllers; sourceTree = "<group>"; };
 		27B8F5BF2F71B0AC00275247 /* ViewModels */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = ViewModels; sourceTree = "<group>"; };
-		27F5008E2F7526540034B703 /* UI */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = UI; sourceTree = "<group>"; };
+		27B8F5C12F71B0AC00275247 /* Views */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Views; sourceTree = "<group>"; };
 		7D9E7E772EB3DD3D00BC1C64 /* Shaders */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Shaders; sourceTree = "<group>"; };
 		ABB5781A2F0D7B9700D30DA1 /* Auth */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Auth; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -90,7 +79,6 @@
 				842316DE1F2030C300D189D1 /* NsdkSamples */,
 				842316DD1F2030C300D189D1 /* Products */,
 				254A2120254A22B000000001 /* Configuration */,
-				F5490660F549062000000001 /* LICENSE */,
 				51297F082CE50C68007F37FA /* Frameworks */,
 			);
 			sourceTree = "<group>";
@@ -106,31 +94,17 @@
 		842316DE1F2030C300D189D1 /* NsdkSamples */ = {
 			isa = PBXGroup;
 			children = (
-				27F5008E2F7526540034B703 /* UI */,
-				27B8F5BD2F71B0AC00275247 /* ViewControllers */,
+				27B8F5C12F71B0AC00275247 /* Views */,
 				27B8F5BF2F71B0AC00275247 /* ViewModels */,
 				27B8F5B52F719F7C00275247 /* AR */,
 				ABB5781A2F0D7B9700D30DA1 /* Auth */,
 				7D9E7E772EB3DD3D00BC1C64 /* Shaders */,
-				665EE2292E58DF8500411261 /* TextureView.swift */,
-				5C16677E20E6E21D00B25B7E /* Plane.swift */,
-				5C028ECF21029E1000C7AB1E /* Utilities.swift */,
-				842316DF1F2030C300D189D1 /* AppDelegate.swift */,
-				842316E81F2030C300D189D1 /* SceneDelegate.swift */,
-				842316E51F2030C300D189D1 /* Main.storyboard */,
+				1A2B3C4D5E6F000000000C01 /* Common */,
+				1A2B3C4D5E6F000000000C02 /* Resources */,
+				27B8F5C32F71B0AC00275247 /* NsdkSamplesApp.swift */,
 				842316ED1F2030C300D189D1 /* Info.plist */,
-				84ABEA091F3D15E70052D547 /* Assets.scnassets */,
-				112FE5661F4F95A200BF85EA /* Assets.xcassets */,
 			);
 			path = NsdkSamples;
-			sourceTree = "<group>";
-		};
-		F5490660F549062000000001 /* LICENSE */ = {
-			isa = PBXGroup;
-			children = (
-				F5491360F548E99000000001 /* LICENSE.txt */,
-			);
-			path = LICENSE;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -140,6 +114,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 842316F01F2030C300D189D1 /* Build configuration list for PBXNativeTarget "NsdkSamples" */;
 			buildPhases = (
+				4C1F5A2E2F8B4D6000A1B2C3 /* Verify Git LFS Files */,
 				842316D81F2030C300D189D1 /* Sources */,
 				842316D91F2030C300D189D1 /* Frameworks */,
 				842316DA1F2030C300D189D1 /* Resources */,
@@ -150,10 +125,11 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
+				1A2B3C4D5E6F000000000C01 /* Common */,
+				1A2B3C4D5E6F000000000C02 /* Resources */,
 				27B8F5B52F719F7C00275247 /* AR */,
-				27B8F5BD2F71B0AC00275247 /* ViewControllers */,
 				27B8F5BF2F71B0AC00275247 /* ViewModels */,
-				27F5008E2F7526540034B703 /* UI */,
+				27B8F5C12F71B0AC00275247 /* Views */,
 				7D9E7E772EB3DD3D00BC1C64 /* Shaders */,
 				ABB5781A2F0D7B9700D30DA1 /* Auth */,
 			);
@@ -169,7 +145,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastSwiftUpdateCheck = 0900;
+				LastSwiftUpdateCheck = 2630;
 				LastUpgradeCheck = 1610;
 				ORGANIZATIONNAME = Apple;
 				TargetAttributes = {
@@ -205,39 +181,46 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				84ABEA0A1F3D15E70052D547 /* Assets.scnassets in Resources */,
-				112FE5671F4F95A200BF85EA /* Assets.xcassets in Resources */,
-				842316E71F2030C300D189D1 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		4C1F5A2E2F8B4D6000A1B2C3 /* Verify Git LFS Files */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Verify Git LFS Files";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Fail early if Git LFS files are still pointer stubs, e.g. a clone made without git-lfs.\npointers=$(find \"${SRCROOT}/NsdkSamples\" -type f -size -3 -exec grep -l -m1 '^version https://git-lfs.github.com/spec/' {} +)\nif [ -n \"$pointers\" ]; then\n  echo \"error: These files are Git LFS pointers, not the real files:\"\n  echo \"$pointers\" | sed \"s|^${SRCROOT}/|  |\"\n  echo \"error: Install Git LFS and fetch them, then rebuild: git lfs install && git lfs pull\"\n  exit 1\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		842316D81F2030C300D189D1 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5C16677F20E6E21D00B25B7E /* Plane.swift in Sources */,
-				842316E01F2030C300D189D1 /* AppDelegate.swift in Sources */,
-				842316E91F2030C300D189D1 /* SceneDelegate.swift in Sources */,
-				665EE22A2E58DF8900411261 /* TextureView.swift in Sources */,
-				5C028ED021029E1000C7AB1E /* Utilities.swift in Sources */,
+				27B8F5C22F71B0AC00275247 /* NsdkSamplesApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
-/* Begin PBXVariantGroup section */
-		842316E51F2030C300D189D1 /* Main.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				842316E61F2030C300D189D1 /* Base */,
-			);
-			name = Main.storyboard;
-			sourceTree = "<group>";
-		};
-/* End PBXVariantGroup section */
+/* Begin PBXTargetDependency section */
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		842316EE1F2030C300D189D1 /* Debug */ = {
@@ -370,6 +353,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = "";
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
@@ -391,9 +375,11 @@
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 4.2;
+				SWIFT_TREAT_WARNINGS_AS_ERRORS = YES;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -408,6 +394,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = "";
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
@@ -429,8 +416,10 @@
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_OBJC_BRIDGING_HEADER = "";
-				SWIFT_VERSION = 4.2;
+				SWIFT_TREAT_WARNINGS_AS_ERRORS = YES;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
@@ -464,13 +453,13 @@
 			repositoryURL = "https://github.com/nianticspatial/nsdk-library-xcframework";
 			requirement = {
 				kind = exactVersion;
-				version = "4.1.0-26051913";
+				version = "4.5.0-26110800";
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		AC54F362590F42A99ADF6ED2 /* NSDK */ = {
+		59443C2EB2B84A45B4419671 /* NSDK */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 7DD99A9F2F1719AD00A0097C /* XCRemoteSwiftPackageReference "nsdk-library-xcframework" */;
 			productName = NSDK;
